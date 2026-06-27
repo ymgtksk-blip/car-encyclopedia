@@ -36,7 +36,8 @@ function t(k){return (UI[k]||{})[L]||(UI[k]||{}).en||k;}
 function pick(o){if(!o)return "";if(typeof o==="string")return o;if(o[L])return o[L];for(const c of FB){if(o[c])return o[c];}const v=Object.values(o);return v.length?v[0]:"";}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function flag(cc){if(!cc||cc.length!==2)return "🏳️";try{return cc.toUpperCase().replace(/./g,c=>String.fromCodePoint(127397+c.charCodeAt(0)));}catch(e){return "🏳️";}}
-function cname(cc){if(!cc)return t("unknown");try{return new Intl.DisplayNames([L],{type:"region"}).of(cc)||cc;}catch(e){return cc;}}
+let _DN=null,_DNL=null;
+function cname(cc){if(!cc)return t("unknown");if(_DNL!==L){try{_DN=new Intl.DisplayNames([L],{type:"region"});}catch(e){_DN=null;}_DNL=L;}try{return _DN?(_DN.of(cc)||cc):cc;}catch(e){return cc;}}
 const BUCKETS=["lt1000","1000_1599","1600_1999","2000_2999","gte3000","unknown"];
 const BLABEL={lt1000:"〜1.0L","1000_1599":"1.0–1.6L","1600_1999":"1.6–2.0L","2000_2999":"2.0–3.0L",gte3000:"3.0L+",unknown:null};
 function bucket(dc){if(dc==null)return "unknown";if(dc<1000)return "lt1000";if(dc<1600)return "1000_1599";if(dc<2000)return "1600_1999";if(dc<3000)return "2000_2999";return "gte3000";}
@@ -131,9 +132,10 @@ document.addEventListener("click",e=>{
  if(e.target.id==="ov"){closeDetail();}
  if(e.target.id==="mfac"){const f=document.getElementById("facets");f.style.display=f.style.display==="block"?"none":"block";}
 });
-document.getElementById("q").addEventListener("input",e=>{F.q=e.target.value.trim().toLowerCase();page=0;refresh();});
-document.getElementById("fcoq").addEventListener("input",renderFacets);
-document.getElementById("fmkq").addEventListener("input",renderFacets);
+function deb(fn,ms){let h;return function(){clearTimeout(h);h=setTimeout(fn,ms);};}
+document.getElementById("q").addEventListener("input",deb(()=>{F.q=document.getElementById("q").value.trim().toLowerCase();page=0;refresh();},200));
+document.getElementById("fcoq").addEventListener("input",deb(renderFacets,200));
+document.getElementById("fmkq").addEventListener("input",deb(renderFacets,200));
 document.getElementById("lang").addEventListener("change",e=>{L=e.target.value;applyLabels();refresh();});
 
 const sel=document.getElementById("lang");sel.value="ja";L="ja";
