@@ -14,6 +14,23 @@
   <span class="count" id="count"></span>
  </div>
 </header>
+<section class="heroband" id="hero">
+ <div class="herobg"></div>
+ <div class="heroinner">
+  <h1 class="herotitle">🚗 World Car Encyclopedia</h1>
+  <p class="herosub" id="herosub">世界のクルマを、12言語で。名車・スーパーカー・JDMまで。</p>
+  <div class="stats">
+   <div class="stat"><b class="num" id="stCars" data-to="0">0</b><span id="stCarsL">台</span></div>
+   <div class="stat"><b class="num" id="stMakers" data-to="0">0</b><span id="stMakersL">メーカー</span></div>
+   <div class="stat"><b class="num" id="stLang" data-to="12">0</b><span id="stLangL">言語</span></div>
+  </div>
+  <div class="herocta">
+   <button class="cta primary" id="ctaRandom"><span id="ctaRandomL">🎲 ランダム</span></button>
+   <button class="cta" id="ctaSearch"><span id="ctaSearchL">🔍 クルマを探す</span></button>
+  </div>
+  <div class="showcase" id="showcase"></div>
+ </div>
+</section>
 <div class="layout">
  <aside class="facets" id="facets">
   <div class="fgroup"><h3 id="hCountry">Country</h3><input class="ffilter" id="fcoq" placeholder="filter…"><div class="flist" id="fco"></div></div>
@@ -28,7 +45,7 @@
 </div>
 <div id="ov"><div id="ovbox"></div></div>
 <script>
-const UI={"search": {"en": "Search…", "ja": "検索…"}, "fCountry": {"en": "Country", "ja": "国"}, "fMaker": {"en": "Maker", "ja": "メーカー"}, "fDisp": {"en": "Engine size", "ja": "排気量"}, "results": {"en": "results", "ja": "件"}, "verified": {"en": "Verified", "ja": "検証済み"}, "unverified": {"en": "Unverified", "ja": "未検証"}, "unknown": {"en": "Unknown", "ja": "不明"}, "noData": {"en": "No matches", "ja": "該当なし"}, "prev": {"en": "Prev", "ja": "前へ"}, "next": {"en": "Next", "ja": "次へ"}};
+const UI={"search": {"en": "Search…", "ja": "検索…"}, "fCountry": {"en": "Country", "ja": "国"}, "fMaker": {"en": "Maker", "ja": "メーカー"}, "fDisp": {"en": "Engine size", "ja": "排気量"}, "results": {"en": "results", "ja": "件"}, "verified": {"en": "Verified", "ja": "検証済み"}, "unverified": {"en": "Unverified", "ja": "未検証"}, "unknown": {"en": "Unknown", "ja": "不明"}, "noData": {"en": "No matches", "ja": "該当なし"}, "prev": {"en": "Prev", "ja": "前へ"}, "next": {"en": "Next", "ja": "次へ"}, "heroSub": {"en": "Cars of the world, in 12 languages — classics, supercars, and JDM icons.", "ja": "世界のクルマを、12言語で。名車・スーパーカー・JDMまで。"}, "heroCtaSearch": {"en": "🔍 Find cars", "ja": "🔍 クルマを探す"}, "heroCtaRandom": {"en": "🎲 Surprise me", "ja": "🎲 ランダム"}, "heroStCars": {"en": "cars", "ja": "台"}, "heroStMakers": {"en": "makers", "ja": "メーカー"}, "heroStLang": {"en": "languages", "ja": "言語"}};
 let L="ja",CARS=[],page=0;const PS=48;
 const F={co:new Set(),mk:new Set(),dc:new Set(),q:""};
 const FB=["en","ja"];
@@ -122,10 +139,14 @@ function applyLabels(){
  document.getElementById("hCountry").textContent=t("fCountry");
  document.getElementById("hMaker").textContent=t("fMaker");
  document.getElementById("hDisp").textContent=t("fDisp");
+ const setT=(id,k)=>{const e=document.getElementById(id);if(e)e.textContent=t(k);};
+ setT("herosub","heroSub");setT("ctaSearchL","heroCtaSearch");setT("ctaRandomL","heroCtaRandom");
+ setT("stCarsL","heroStCars");setT("stMakersL","heroStMakers");setT("stLangL","heroStLang");
 }
 document.addEventListener("click",e=>{
  const fi=e.target.closest(".fitem");if(fi){const d=fi.dataset.d,k=fi.dataset.k;F[d].has(k)?F[d].delete(k):F[d].add(k);page=0;refresh();return;}
  const ch=e.target.closest(".chip");if(ch){F[ch.dataset.d].delete(ch.dataset.k);page=0;refresh();return;}
+ const sc=e.target.closest(".scard");if(sc){showDetail(sc.dataset.id);return;}
  const cd=e.target.closest(".card");if(cd){showDetail(cd.dataset.id);return;}
  if(e.target.id==="prev"){page--;render();window.scrollTo(0,0);}
  if(e.target.id==="next"){page++;render();window.scrollTo(0,0);}
@@ -138,8 +159,24 @@ document.getElementById("fcoq").addEventListener("input",deb(renderFacets,200));
 document.getElementById("fmkq").addEventListener("input",deb(renderFacets,200));
 document.getElementById("lang").addEventListener("change",e=>{L=e.target.value;applyLabels();refresh();});
 
+function animateCount(el,to){if(!el)return;let s=null;function step(t){if(s===null)s=t;const p=Math.min((t-s)/1100,1);const e=1-Math.pow(1-p,3);el.textContent=Math.floor(to*e).toLocaleString();if(p<1)requestAnimationFrame(step);}requestAnimationFrame(step);}
+function renderShowcase(){
+ const top=CARS.filter(c=>c.img).sort((a,b)=>(b.v||0)-(a.v||0)).slice(0,18);
+ const el=document.getElementById("showcase");if(!el)return;
+ el.innerHTML=top.map(c=>`<div class="scard" data-id="${esc(c.id)}"><img loading="lazy" src="${esc(c.img)}" alt="${esc(pick(c.n))}">${c.v?`<span class="scnt">✓</span>`:""}<div class="scn">${esc(pick(c.n))}</div></div>`).join("");
+}
+function initHero(){
+ animateCount(document.getElementById("stCars"),CARS.length);
+ animateCount(document.getElementById("stMakers"),new Set(CARS.map(c=>c.mk).filter(Boolean)).size);
+ animateCount(document.getElementById("stLang"),12);
+ renderShowcase();
+}
+function goRandom(){const pool=CARS.filter(c=>c.img||c.v);if(!pool.length)return;const c=pool[Math.floor(Math.random()*pool.length)];showDetail(c.id);}
+document.getElementById("ctaSearch").addEventListener("click",()=>{const q=document.getElementById("q");document.querySelector(".layout").scrollIntoView({behavior:"smooth",block:"start"});setTimeout(()=>q.focus(),350);});
+document.getElementById("ctaRandom").addEventListener("click",goRandom);
+
 const sel=document.getElementById("lang");sel.value="ja";L="ja";
-fetch("data/cars.json").then(r=>r.json()).then(d=>{CARS=d;applyLabels();refresh();})
+fetch("data/cars.json").then(r=>r.json()).then(d=>{CARS=d;applyLabels();refresh();initHero();})
  .catch(e=>{document.getElementById("grid").innerHTML="<p class=count>データ読み込みに失敗しました（ローカルでは python3 -m http.server で開いてください）</p>";});
 </script>
 <footer>World Car Encyclopedia · 写真: Wikimedia Commons（各ライセンスは画像詳細/出典を参照）· データ出典付き</footer>
