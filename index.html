@@ -16,6 +16,7 @@
 </header>
 <section class="heroband" id="hero">
  <div class="herobg"></div>
+ <div class="herophotos" id="heroBackdrop" aria-hidden="true"></div>
  <div class="heroinner">
   <h1 class="herotitle">🚗 World Car Encyclopedia</h1>
   <p class="herosub" id="herosub">世界のクルマを、12言語で。名車・スーパーカー・JDMまで。</p>
@@ -163,12 +164,21 @@ function animateCount(el,to){if(!el)return;let s=null;function step(t){if(s===nu
 function renderShowcase(){
  const top=CARS.filter(c=>c.img).sort((a,b)=>(b.v||0)-(a.v||0)).slice(0,18);
  const el=document.getElementById("showcase");if(!el)return;
- el.innerHTML=top.map(c=>`<div class="scard" data-id="${esc(c.id)}"><img loading="lazy" src="${esc(c.img)}" alt="${esc(pick(c.n))}">${c.v?`<span class="scnt">✓</span>`:""}<div class="scn">${esc(pick(c.n))}</div></div>`).join("");
+ if(!top.length){el.innerHTML="";return;}
+ const cards=top.concat(top).map(c=>`<div class="scard" data-id="${esc(c.id)}"><img loading="lazy" src="${esc(c.img)}" alt="${esc(pick(c.n))}">${c.v?`<span class="scnt">✓</span>`:""}<div class="scn">${esc(pick(c.n))}</div></div>`).join("");
+ el.innerHTML=`<div class="showtrack">${cards}</div>`;
+}
+function initHeroBackdrop(){
+ const el=document.getElementById("heroBackdrop");if(!el)return;
+ const imgs=CARS.filter(c=>c.img).slice(0,6).map(c=>c.img);
+ if(!imgs.length){el.innerHTML="";return;}
+ el.innerHTML=imgs.map(u=>`<span class="herotile" style="background-image:url('${esc(u)}')"></span>`).join("");
 }
 function initHero(){
  animateCount(document.getElementById("stCars"),CARS.length);
  animateCount(document.getElementById("stMakers"),new Set(CARS.map(c=>c.mk).filter(Boolean)).size);
  animateCount(document.getElementById("stLang"),12);
+ initHeroBackdrop();
  renderShowcase();
 }
 function goRandom(){const pool=CARS.filter(c=>c.img||c.v);if(!pool.length)return;const c=pool[Math.floor(Math.random()*pool.length)];showDetail(c.id);}
